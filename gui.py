@@ -1,6 +1,5 @@
 # from curses.textpad import Textbox
-from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QDialog, QComboBox, QLabel, QVBoxLayout, QLineEdit, QMessageBox, QDesktopWidget, QWidget
-from datetime import datetime
+from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QVBoxLayout, QLineEdit, QMessageBox, QDesktopWidget
 from functools import partial
 import numpy as np
 from PyQt5.QtCore import Qt, pyqtSlot
@@ -9,17 +8,15 @@ import sys
 from random import seed, random, shuffle, randint, choice
 from PyQt5 import QtGui
 from PyQt5.QtCore import QRect
-from PyQt5 import QtCore
 from functools import reduce
+from sqlalchemy import true
 
 COLOR_A = '#0FC'
 COLOR_ERR = '#F00'
 COLOR_SOLVED = '#F03'
 
-
 def use_color_A(i, j):
     return (i // 3 + j // 3) % 2 == 1
-
 
 def operation(operator):
     """
@@ -37,18 +34,11 @@ def operation(operator):
     else:
         return None
 
-
 def adjacent(xy1, xy2):
-    """
-    Checks wheither two positions represented in 2D coordinates are adjacent
-    """
     x1, y1 = xy1
     x2, y2 = xy2
-
     dx, dy = x1 - x2, y1 - y2
-
     return (dx == 0 and abs(dy) == 1) or (dy == 0 and abs(dx) == 1)
-
 
 def generate(size):
     board = [[((i + j) % size) + 1 for i in range(size)] for j in range(size)]
@@ -114,6 +104,14 @@ def generate(size):
 
     return size, cliques
 
+
+def validate(cliques):
+    for member in cliques:
+        target = member[2]
+        if target < 0:
+            return False
+
+    return True
 
 class AnotherWindow(QMainWindow):
     """
@@ -189,7 +187,13 @@ class AnotherWindow(QMainWindow):
         qtRectangle.moveCenter(centerPoint)
         self.move(qtRectangle.topLeft())
         size, cliques = generate(n)
+        print(cliques)
         self.setWindowTitle('KENKEN PUZZLE')
+        valid=validate(cliques)
+        while(valid==False):    
+            size, cliques = generate(n)
+            valid = validate(cliques)
+  
 
         for members in cliques:
             random_number = randint(0, 16777215)
@@ -200,7 +204,6 @@ class AnotherWindow(QMainWindow):
                 x, y = member
                 i = x-1
                 j = y-1
-                print(cliques)
                 flag = flag+1
                 setattr(self, 'textbox%d%d' % (i, j), QLineEdit(self))
                 getattr(self, 'textbox%d%d' % (i, j)).move(20 + 92 * j, 20 + 92 * i)
@@ -242,20 +245,16 @@ class Window (QMainWindow):
         self.setWindowTitle(title)
         self.setWindowIcon(QtGui.QIcon(iConName))
         self.setGeometry(left,top,width,height)
-        self.CreateButton()
-       
+        self.CreateButton()      
         self.size()
-       
-        
         self.show()
         # self.initUI()
+
     def show_new_window(self, checked):
-       print(self.num)
        self.w.initUI(self.num)
        self.w.buttons()
        self.w.setGeometry(50,50,950,1000)
        self.w.display()
-
       
     def size(self):
         self.textbox = QLineEdit(self)
@@ -263,17 +262,14 @@ class Window (QMainWindow):
         self.textbox.resize(280,40)
     
     def on_click(self):
-        
         textboxValue = self.textbox.text()
         if(int(textboxValue)>9 or int(textboxValue)<3):
             QMessageBox.question(self, 'Message - pythonspot.com', "Error" + textboxValue, QMessageBox.Ok, QMessageBox.Ok)
             self.textbox.setText("")
-
         else:
             self.num=int(textboxValue)
             self.button.clicked.connect(self.show_new_window)
                   
-
     def CreateButton(self):
         # Create a button in the window
          self.button = QPushButton('Enter Size', self)
@@ -282,8 +278,6 @@ class Window (QMainWindow):
         # connect button to function on_click
          self.button.clicked.connect(self.on_click)
          
-   
-   
 
 if __name__ == '__main__':
    # App=QApplication(sys.argv)
