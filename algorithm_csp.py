@@ -156,4 +156,52 @@ def AC3(csp, queue=None, removals=None):
                 if Xk != Xj:
                     queue.append((Xk, Xi))
     return True
+def revise(csp, Xi, Xj, removals):
+    """Return true if we remove a value."""
+    revised = False
+    for x in csp.curr_domains[Xi][:]:
+        # If Xi=x conflicts with Xj=y for every possible y, eliminate Xi=x
+        if all(not csp.constraints(Xi, x, Xj, y) for y in csp.curr_domains[Xj]):
+            csp.prune(Xi, x, removals)
+            revised = True
+    return revised
+
+
+def first_unassigned_variable(assignment, csp):
+    """The default variable order."""
+    return first([var for var in csp.variables if var not in assignment])
+
+
+def mrv(assignment, csp):
+    """Minimum-remaining-values heuristic."""
+    return argmin_random_tie(
+        [v for v in csp.variables if v not in assignment],
+        key=lambda var: num_legal_values(csp, var, assignment))
+
+
+def num_legal_values(csp, var, assignment):
+    if csp.curr_domains:
+        return len(csp.curr_domains[var])
+    else:
+        return count(csp.nconflicts(var, val, assignment) == 0
+                     for val in csp.domains[var])
+
+# Value ordering
+
+
+def unordered_domain_values(var, assignment, csp):
+    """The default value order."""
+    return csp.choices(var)
+
+
+def lcv(var, assignment, csp):
+    """Least-constraining-values heuristic."""
+    return sorted(csp.choices(var),
+                  key=lambda val: csp.nconflicts(var, val, assignment))
+
+# Inference
+
+
+def no_inference(csp, var, value, assignment, removals):
+    return True
 
