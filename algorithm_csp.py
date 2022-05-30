@@ -58,3 +58,56 @@ class CSP():
         just call assign for that."""
         if var in assignment:
             del assignment[var]
+
+
+    def nconflicts(self, var, val, assignment):
+        """Return the number of conflicts var=val has with other variables."""
+        # Subclasses may implement this more efficiently
+        def conflict(var2):
+            return (var2 in assignment and
+                    not self.constraints(var, val, var2, assignment[var2]))
+        return count(conflict(v) for v in self.neighbors[var])
+
+    def display(self, assignment):
+        """Show a human-readable representation of the CSP."""
+        # Subclasses can print in a prettier way, or display with a GUI
+        print('CSP:', self, 'with assignment:', assignment)
+
+    # These methods are for the tree and graph-search interface:
+    def actions(self, state):
+        """Return a list of applicable actions: nonconflicting
+        assignments to an unassigned variable."""
+        if len(state) == len(self.variables):
+            return []
+        else:
+            assignment = dict(state)
+            var = first([v for v in self.variables if v not in assignment])
+            return [(var, val) for val in self.domains[var]
+                    if self.nconflicts(var, val, assignment) == 0]
+
+    def result(self, state, action):
+        """Perform an action and return the new state."""
+        (var, val) = action
+        return state + ((var, val),)
+
+    def goal_test(self, state):
+        """The goal is to assign all variables, with all constraints satisfied."""
+        assignment = dict(state)
+        return (len(assignment) == len(self.variables)
+                and all(self.nconflicts(variables, assignment[variables], assignment) == 0
+                        for variables in self.variables))
+
+    # These are for constraint propagation
+    def support_pruning(self):
+        """Make sure we can prune values from domains. (We want to pay
+        for this only if we use it.)"""
+        if self.curr_domains is None:
+            self.curr_domains = {
+                v: list(self.domains[v]) for v in self.variables}
+
+    def suppose(self, var, value):
+        """Start accumulating inferences from assuming var=value."""
+        self.support_pruning()
+        removals = [(var, a) for a in self.curr_domains[var] if a != value]
+        self.curr_domains[var] = [value]
+        return removals
