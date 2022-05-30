@@ -205,3 +205,49 @@ def lcv(var, assignment, csp):
 def no_inference(csp, var, value, assignment, removals):
     return True
 
+
+
+def forward_checking(csp, var, value, assignment, removals):
+    """Prune neighbor values inconsistent with var=value."""
+    csp.support_pruning()
+    for B in csp.neighbors[var]:
+        if B not in assignment:
+            for b in csp.curr_domains[B][:]:
+                if not csp.constraints(var, value, B, b):
+                    csp.prune(B, b, removals)
+            if not csp.curr_domains[B]:
+                return False
+    return True
+
+
+def mac(csp, var, value, assignment, removals):
+    """Maintain arc consistency."""
+    return AC3(csp, [(X, var) for X in csp.neighbors[var]], removals)
+
+# The search, proper
+
+
+def backtracking_search(csp,
+                        select_unassigned_variable=first_unassigned_variable,
+                        order_domain_values=unordered_domain_values,
+                        inference=no_inference):
+
+    def backtrack(assignment):
+        if len(assignment) == len(csp.variables):
+            return assignment
+        var = select_unassigned_variable(assignment, csp)
+        for value in order_domain_values(var, assignment, csp):
+            if 0 == csp.nconflicts(var, value, assignment):
+                csp.assign(var, value, assignment)
+                removals = csp.suppose(var, value)
+                if inference(csp, var, value, assignment, removals):
+                    result = backtrack(assignment)
+                    if result is not None:
+                        return result
+                csp.restore(removals)
+        csp.unassign(var, assignment)
+        return None
+
+    result = backtrack({})
+    assert result is None or csp.goal_test(result)
+    return result
