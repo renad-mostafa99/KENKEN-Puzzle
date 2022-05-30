@@ -139,12 +139,11 @@ class CSP():
         return [var for var in self.variables
                 if self.nconflicts(var, current[var], current) > 0]
 
-# ______________________________________________________________________________
+
 # Constraint Propagation with AC-3
 
 
 def AC3(csp, queue=None, removals=None):
-    """[Figure 6.3]"""
     if queue is None:
         queue = [(Xi, Xk) for Xi in csp.variables for Xk in csp.neighbors[Xi]]
     csp.support_pruning()
