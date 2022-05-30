@@ -111,3 +111,50 @@ class CSP():
         removals = [(var, a) for a in self.curr_domains[var] if a != value]
         self.curr_domains[var] = [value]
         return removals
+        def prune(self, var, value, removals):
+        """Rule out var=value."""
+        self.curr_domains[var].remove(value)
+        if removals is not None:
+            removals.append((var, value))
+
+    def choices(self, var):
+        """Return all values for var that aren't currently ruled out."""
+        return (self.curr_domains or self.domains)[var]
+
+    def infer_assignment(self):
+        """Return the partial assignment implied by the current inferences."""
+        self.support_pruning()
+        return {v: self.curr_domains[v][0]
+                for v in self.variables if 1 == len(self.curr_domains[v])}
+
+    def restore(self, removals):
+        """Undo a supposition and all inferences from it."""
+        for B, b in removals:
+            self.curr_domains[B].append(b)
+
+    # This is for min_conflicts search
+
+    def conflicted_vars(self, current):
+        """Return a list of variables in current assignment that are in conflict"""
+        return [var for var in self.variables
+                if self.nconflicts(var, current[var], current) > 0]
+
+# ______________________________________________________________________________
+# Constraint Propagation with AC-3
+
+
+def AC3(csp, queue=None, removals=None):
+    """[Figure 6.3]"""
+    if queue is None:
+        queue = [(Xi, Xk) for Xi in csp.variables for Xk in csp.neighbors[Xi]]
+    csp.support_pruning()
+    while queue:
+        (Xi, Xj) = queue.pop()
+        if revise(csp, Xi, Xj, removals):
+            if not csp.curr_domains[Xi]:
+                return False
+            for Xk in csp.neighbors[Xi]:
+                if Xk != Xj:
+                    queue.append((Xk, Xi))
+    return True
+
