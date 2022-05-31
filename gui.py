@@ -40,6 +40,7 @@ COLOR_ERR = '#F00'
 COLOR_SOLVED = '#F03'
 
 
+
 def use_color_A(i, j):
     return (i // 3 + j // 3) % 2 == 1
 
@@ -481,7 +482,6 @@ class AnotherWindow(QMainWindow):
         height = 800
         self.cliques = []
         self.size = 0
-
         self.setGeometry(left, top, width, height)
         self.setWindowTitle("hello")
         layout = QVBoxLayout()
@@ -517,15 +517,67 @@ class AnotherWindow(QMainWindow):
             #hex_number = str(hex(random_number))
             # color = '#' + hex_number[2:]
             flag = 0
-            print(assignment)
-
             for member in members:
                 value = assignment[members][flag]
                 x, y = member
                 i = x-1
                 j = y-1
                 flag = flag+1
+                font = QFont()
+                font.setFamily("Comic Sans MS")
+                font.setPointSize(15)
+                m = ""
+                m = getattr(self, 'textbox%d%d' % (i, j)).toPlainText()
+                getattr(self, 'textbox%d%d' % (i, j)).setText(
+                    m+"\n"+"\n"+"   "+str(value).capitalize())
+        print(assignment)
 
+                #getattr(self, 'textbox%d%d' % (i, j)).setFont(font)
+                #getattr(self, 'textbox%d%d' % (i, j)).textChanged.connect(partial(self.on_change, i, j, use_color_A(i, j)))
+
+    def Backtracking_with_forward_checking(self):
+        ken = Kenken(self.size, self.cliques)
+        assignment = algorithm_csp.backtracking_search(
+        ken, inference=algorithm_csp.forward_checking)
+        for members in assignment:
+            #random_number = randint(0, 16777215)
+            #hex_number = str(hex(random_number))
+            # color = '#' + hex_number[2:]
+            flag = 0
+            for member in members:
+                value = assignment[members][flag]
+                x, y = member
+                i = x-1
+                j = y-1
+                flag = flag+1
+                #setattr(self, 'textbox%d%d' % (i, j), QTextEdit(self))
+                #getattr(self, 'textbox%d%d' % (i, j)).move(20 + 92 * j, 20 + 92 * i)
+                #getattr(self, 'textbox%d%d' % (i, j)).resize(90, 90)
+                #getattr(self, 'textbox%d%d' % (i, j)).setAlignment(Qt.AlignCenter)
+                font = QFont()
+                font.setFamily("Comic Sans MS")
+                font.setPointSize(15)
+                m = ""
+                m = getattr(self, 'textbox%d%d' % (i, j)).toPlainText()
+                getattr(self, 'textbox%d%d' % (i, j)).setText(
+                    m+"\n"+"\n"+"   "+str(value).capitalize())
+        print(assignment)
+
+    def Backtracking_with_arc_consistency(self):
+        self.on_clear_click()
+        ken = Kenken(self.size, self.cliques)
+        assignment = algorithm_csp.backtracking_search(ken, inference=algorithm_csp.mac)
+        for members in assignment:
+            #random_number = randint(0, 16777215)
+            #hex_number = str(hex(random_number))
+            # color = '#' + hex_number[2:]
+            flag = 0
+            for member in members:
+                value = assignment[members][flag]
+                x, y = member
+                i = x-1
+                j = y-1
+                flag = flag+1
                 #setattr(self, 'textbox%d%d' % (i, j), QTextEdit(self))
                 #getattr(self, 'textbox%d%d' % (i, j)).move(20 + 92 * j, 20 + 92 * i)
                 #getattr(self, 'textbox%d%d' % (i, j)).resize(90, 90)
@@ -535,75 +587,11 @@ class AnotherWindow(QMainWindow):
                 font.setPointSize(15)
 
                 m = ""
-                m = getattr(self, 'textbox%d%d' % (i, j)).toPlainText()
+                m= getattr(self, 'textbox%d%d' % (i, j)).toPlainText()
 
                 getattr(self, 'textbox%d%d' % (i, j)).setText(
                     m+"\n"+"\n"+"   "+str(value).capitalize())
-
-                #getattr(self, 'textbox%d%d' % (i, j)).setFont(font)
-                #getattr(self, 'textbox%d%d' % (i, j)).textChanged.connect(partial(self.on_change, i, j, use_color_A(i, j)))
-
-    def Backtracking_with_forward_checking(self):
-        ken = Kenken(self.size, self.cliques)
-        assignment = algorithm_csp.backtracking_search(
-            ken, inference=algorithm_csp.forward_checking)
-
-        for members in assignment:
-            #random_number = randint(0, 16777215)
-            #hex_number = str(hex(random_number))
-            # color = '#' + hex_number[2:]
-            flag = 0
-            print(assignment)
-            for member in members:
-                value = assignment[members][flag]
-                x, y = member
-                i = x-1
-                j = y-1
-                flag = flag+1
-                #setattr(self, 'textbox%d%d' % (i, j), QTextEdit(self))
-                getattr(self, 'textbox%d%d' % (i, j)).move(
-                    20 + 92 * j, 20 + 92 * i)
-                getattr(self, 'textbox%d%d' % (i, j)).resize(90, 90)
-                getattr(self, 'textbox%d%d' %
-                        (i, j)).setAlignment(Qt.AlignCenter)
-                font = QFont()
-                font.setFamily("Comic Sans MS")
-                font.setPointSize(15)
-                getattr(self, 'textbox%d%d' % (i, j)).setText(str(value))
-                getattr(self, 'textbox%d%d' % (i, j)).setFont(font)
-                getattr(self, 'textbox%d%d' % (i, j)).textChanged.connect(
-                    partial(self.on_change, i, j, use_color_A(i, j)))
-
-    def Backtracking_with_arc_consistency(self):
-        ken = Kenken(self.size, self.cliques)
-        assignment = algorithm_csp.backtracking_search(
-            ken, inference=algorithm_csp.mac)
-        for members in assignment:
-            #random_number = randint(0, 16777215)
-            #hex_number = str(hex(random_number))
-            # color = '#' + hex_number[2:]
-            flag = 0
-            print(assignment)
-            for member in members:
-                value = assignment[members][flag]
-                x, y = member
-                i = x-1
-                j = y-1
-                flag = flag+1
-                #setattr(self, 'textbox%d%d' % (i, j), QTextEdit(self))
-                getattr(self, 'textbox%d%d' % (i, j)).move(
-                    20 + 92 * j, 20 + 92 * i)
-                getattr(self, 'textbox%d%d' % (i, j)).resize(90, 90)
-                getattr(self, 'textbox%d%d' %
-                        (i, j)).setAlignment(Qt.AlignCenter)
-                font = QFont()
-                font.setFamily("Comic Sans MS")
-                font.setPointSize(15)
-                getattr(self, 'textbox%d%d' % (i, j)).setText(str(value))
-                getattr(self, 'textbox%d%d' % (i, j)).setFont(font)
-                getattr(self, 'textbox%d%d' % (i, j)).textChanged.connect(
-                    partial(self.on_change, i, j, use_color_A(i, j)))
-
+               
     def Close(self):
         sys.exit()
 
@@ -630,9 +618,21 @@ class AnotherWindow(QMainWindow):
             self.button1.setEnabled(True)
             self.button2.setEnabled(True)
             self.button3.setEnabled(True)
-
+    def on_clear_click(self):
+       # self.console_text.setText('Welcome. Esc to exit')
+        for i in range(self.siz):
+            for j in range(self.siz):
+                getattr(self, 'textbox%d%d' % (i, j)).setText('')
+                #getattr(self,'textbox%d%d' % (i, j)).setStyleSheet('color: black;')
+                #if use_color_A(i, j):
+                 #   getattr(self, 'textbox%d%d' % (i, j)).setStyleSheet(
+                      #  'background-color: %s;' % COLOR_A)
+                #else:
+                 #   getattr(self, 'textbox%d%d' % (i, j)).setStyleSheet(
+                  #      'background-color: %s;' % COLOR_B)
     def initUI(self, n):
         self.siz = n
+        
         qtRectangle = self.frameGeometry()
         centerPoint = QDesktopWidget().availableGeometry().center()
         qtRectangle.moveCenter(centerPoint)
@@ -645,15 +645,15 @@ class AnotherWindow(QMainWindow):
         consolas.setFamily("Consolas")
         consolas.setPointSize(12)
         # self.button1.setFont(consolas)
-        self.button1.setGeometry(QRect(10, 700, 100, 50))
+        self.button1.setGeometry(QRect(10, 900, 100, 50))
         # connect the solve button to function on_solve_click
         self.button1.clicked.connect(self.Backtracking)
         self.button2 = QPushButton("Backtracking with forward checking", self)
         self.button3 = QPushButton("Backtracking with arc consistency", self)
         self.button4 = QPushButton("Close", self)
-        self.button2.setGeometry(QRect(120, 700, 250, 50))
-        self.button3.setGeometry(QRect(380, 700, 250, 50))
-        self.button4.setGeometry(QRect(640, 700, 100, 50))
+        self.button2.setGeometry(QRect(120, 900, 250, 50))
+        self.button3.setGeometry(QRect(380, 900, 250, 50))
+        self.button4.setGeometry(QRect(640, 900, 100, 50))
         #button1.clicked.connect(self. Backtracking)
         self.button2.clicked.connect(self. Backtracking_with_forward_checking)
         self.button3.clicked.connect(self.Backtracking_with_arc_consistency)
@@ -701,6 +701,8 @@ class AnotherWindow(QMainWindow):
                 else:
                     getattr(self, 'textbox%d%d' % (i, j)).setStyleSheet(
                         'background-color: %s;' % color)
+        
+                
 
 
 class Window (QMainWindow):
