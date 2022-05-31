@@ -457,38 +457,105 @@ class AnotherWindow(QMainWindow):
         layout.addWidget(self.CloseButton)
         self.setLayout(layout)
 
-    def buttons(self):
-        button1 = QPushButton("Backtracking", self)
-        button2 = QPushButton("Forward checking", self)
-        button3 = QPushButton("Arc consistency", self)
-        button4 = QPushButton("Close", self)
+    #def buttons(self):
+        #button1 = QPushButton("Backtracking", self)
+        #button2 = QPushButton("Forward checking", self)
+        #button3 = QPushButton("Arc consistency", self)
+        #button4 = QPushButton("Close", self)
           # button.move(100,100)
-        button1.setGeometry(QRect(30, 900, 150, 50))
-        button2.setGeometry(QRect(200, 900, 200, 50))
-        button3.setGeometry(QRect(420, 900, 200, 50))
-        button4.setGeometry(QRect(640, 900, 100, 50))
-        button1.clicked.connect(self. Backtracking)
-        button2.clicked.connect(self. Backtracking_with_forward_checking)
-        button3.clicked.connect(self.Backtracking_with_arc_consistency)
-        button4.clicked.connect(self.Close)
+        #button1.setGeometry(QRect(30, 900, 150, 50))
+        #button2.setGeometry(QRect(200, 900, 200, 50))
+        #button3.setGeometry(QRect(420, 900, 200, 50))
+        #button4.setGeometry(QRect(640, 900, 100, 50))
+        #button1.clicked.connect(self. Backtracking)
+        #button2.clicked.connect(self. Backtracking_with_forward_checking)
+        #button3.clicked.connect(self.Backtracking_with_arc_consistency)
+        #button4.clicked.connect(self.Close)""
     
     def Backtracking(self):
-        print("hello")
         ken = Kenken(self.size, self.cliques)
         assignment = algorithm_csp.backtracking_search(ken)
-       
         
-        print(assignment)
+        for members in assignment:
+            #random_number = randint(0, 16777215)
+            #hex_number = str(hex(random_number))
+            #color = '#' + hex_number[2:]
+            flag = 0
+            print(assignment)
+            
 
+            for member in members:
+                value=assignment[members][flag]
+                x, y = member
+                i = x-1
+                j = y-1
+                flag = flag+1
+
+                #setattr(self, 'textbox%d%d' % (i, j), QLineEdit(self))
+                getattr(self, 'textbox%d%d' % (i, j)).move(20 + 92 * j, 20 + 92 * i)
+                getattr(self, 'textbox%d%d' % (i, j)).resize(90, 90)
+                getattr(self, 'textbox%d%d' % (i, j)).setAlignment(Qt.AlignCenter)
+                font = QFont()
+                font.setFamily("Comic Sans MS")
+                font.setPointSize(15)
+                getattr(self, 'textbox%d%d' % (i, j)).setText(str(value))
+                getattr(self, 'textbox%d%d' % (i, j)).setFont(font)
+                getattr(self, 'textbox%d%d' % (i, j)).textChanged.connect(partial(self.on_change, i, j, use_color_A(i, j)))
+            
     def Backtracking_with_forward_checking(self):
         ken = Kenken(self.size, self.cliques)
         assignment = algorithm_csp.backtracking_search(ken, inference=algorithm_csp.forward_checking)
-        print(assignment)
+         
+        for members in assignment:
+            #random_number = randint(0, 16777215)
+            #hex_number = str(hex(random_number))
+            #color = '#' + hex_number[2:]
+            flag = 0
+            print(assignment)
+            for member in members:
+                value=assignment[members][flag]
+                x, y = member
+                i = x-1
+                j = y-1
+                flag = flag+1
+                #setattr(self, 'textbox%d%d' % (i, j), QLineEdit(self))
+                getattr(self, 'textbox%d%d' % (i, j)).move(20 + 92 * j, 20 + 92 * i)
+                getattr(self, 'textbox%d%d' % (i, j)).resize(90, 90)
+                getattr(self, 'textbox%d%d' % (i, j)).setAlignment(Qt.AlignCenter)
+                font = QFont()
+                font.setFamily("Comic Sans MS")
+                font.setPointSize(15)
+                getattr(self, 'textbox%d%d' % (i, j)).setText(str(value))
+                getattr(self, 'textbox%d%d' % (i, j)).setFont(font)
+                getattr(self, 'textbox%d%d' % (i, j)).textChanged.connect(partial(self.on_change, i, j, use_color_A(i, j)))
+       
 
     def Backtracking_with_arc_consistency(self):
         ken = Kenken(self.size, self.cliques)
         assignment = algorithm_csp.backtracking_search(ken, inference=algorithm_csp.mac)
-        print(assignment)
+        for members in assignment:
+            #random_number = randint(0, 16777215)
+            #hex_number = str(hex(random_number))
+            #color = '#' + hex_number[2:]
+            flag = 0
+            print(assignment)
+            for member in members:
+                value=assignment[members][flag]
+                x, y = member
+                i = x-1
+                j = y-1
+                flag = flag+1
+                #setattr(self, 'textbox%d%d' % (i, j), QLineEdit(self))
+                getattr(self, 'textbox%d%d' % (i, j)).move(20 + 92 * j, 20 + 92 * i)
+                getattr(self, 'textbox%d%d' % (i, j)).resize(90, 90)
+                getattr(self, 'textbox%d%d' % (i, j)).setAlignment(Qt.AlignCenter)
+                font = QFont()
+                font.setFamily("Comic Sans MS")
+                font.setPointSize(15)
+                getattr(self, 'textbox%d%d' % (i, j)).setText(str(value))
+                getattr(self, 'textbox%d%d' % (i, j)).setFont(font)
+                getattr(self, 'textbox%d%d' % (i, j)).textChanged.connect(partial(self.on_change, i, j, use_color_A(i, j)))
+       
 
     def Close(self):
        sys.exit()
@@ -501,15 +568,21 @@ class AnotherWindow(QMainWindow):
         if len(n) == 1 and not n.isdigit() or len(n) > 1:
             getattr(self, 'textbox%d%d' % (i, j)).setStyleSheet(
                 'background-color: %s;' % COLOR_ERR)
-            self.solve_button.setEnabled(False)
+            self.button1.setEnabled(False)
+            self.button2.setEnabled(False)
+            self.button3.setEnabled(False)
         elif is_color_A:
             getattr(self, 'textbox%d%d' % (i, j)).setStyleSheet(
                 'background-color: %s;' % COLOR_A)
-            self.solve_button.setEnabled(True)
+            self.button1.setEnabled(True)
+            self.button2.setEnabled(True)
+            self.button3.setEnabled(True)
         else:
             getattr(self, 'textbox%d%d' % (i, j)).setStyleSheet(
                 'background-color: %s;' % COLOR_A)
-            self.solve_button.setEnabled(True)
+            self.button1.setEnabled(True)
+            self.button2.setEnabled(True)
+            self.button3.setEnabled(True)
 
     def initUI(self, n):
         self.siz=n
@@ -518,14 +591,32 @@ class AnotherWindow(QMainWindow):
         qtRectangle.moveCenter(centerPoint)
         self.move(qtRectangle.topLeft())
         self.size, self.cliques = generate(n)
+        self.button1 = QPushButton('Backtracking', self)
+        self.button1.resize(360, 30)
+        self.button1.move(20, 385)
+        consolas = QFont()
+        consolas.setFamily("Consolas")
+        consolas.setPointSize(12)
+        #self.button1.setFont(consolas)
+        self.button1.setGeometry(QRect(10,700,100,50))
+        # connect the solve button to function on_solve_click
+        self.button1.clicked.connect(self.Backtracking)
+        self.button2 = QPushButton("Backtracking with forward checking",self)
+        self.button3 = QPushButton("Backtracking with arc consistency",self)
+        self.button4 = QPushButton("Close",self)
+        self.button2.setGeometry(QRect(120,700,250,50))
+        self.button3.setGeometry(QRect(380,700,250,50))
+        self.button4.setGeometry(QRect(640,700,100,50))
+        #button1.clicked.connect(self. Backtracking)
+        self.button2.clicked.connect(self. Backtracking_with_forward_checking)
+        self.button3.clicked.connect(self.Backtracking_with_arc_consistency)
+        self.button4.clicked.connect(self.Close)
         print(self.cliques)
         self.setWindowTitle('KENKEN PUZZLE')
         valid=validate(self.cliques)
         while(valid==False):    
             self.size, self.cliques = generate(n)
             valid = validate(self.cliques)
-  
-
         for members in self.cliques:
             random_number = randint(0, 16777215)
             hex_number = str(hex(random_number))
@@ -583,7 +674,7 @@ class Window (QMainWindow):
 
     def show_new_window(self, checked):
        self.w.initUI(self.num)
-       self.w.buttons()
+      # self.w.buttons()
        self.w.setGeometry(50,50,950,1000)
        self.w.display()
       
