@@ -1,5 +1,5 @@
 # from curses.textpad import Textbox
-from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QVBoxLayout, QLineEdit, QMessageBox, QDesktopWidget
+from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QVBoxLayout, QTextEdit, QMessageBox, QDesktopWidget
 from functools import partial
 import numpy as np
 from PyQt5.QtCore import Qt, pyqtSlot
@@ -39,8 +39,10 @@ COLOR_A = '#0FC'
 COLOR_ERR = '#F00'
 COLOR_SOLVED = '#F03'
 
+
 def use_color_A(i, j):
     return (i // 3 + j // 3) % 2 == 1
+
 
 def operation(operator):
     """
@@ -58,11 +60,13 @@ def operation(operator):
     else:
         return None
 
+
 def adjacent(xy1, xy2):
     x1, y1 = xy1
     x2, y2 = xy2
     dx, dy = x1 - x2, y1 - y2
     return (dx == 0 and abs(dy) == 1) or (dy == 0 and abs(dx) == 1)
+
 
 def generate(size):
     board = [[((i + j) % size) + 1 for i in range(size)] for j in range(size)]
@@ -127,6 +131,8 @@ def generate(size):
         cliques[-1] = (tuple(cliques[-1]), operator, int(target))
 
     return size, cliques
+
+
 def conflicting(A, a, B, b):
     """
     Evaluates to true if:
@@ -147,6 +153,7 @@ def conflicting(A, a, B, b):
                 return True
 
     return False
+
 
 def validate(cliques):
     for member in cliques:
@@ -156,12 +163,15 @@ def validate(cliques):
 
     return True
 
+
 def RowXorCol(xy1, xy2):
     """
     Evaluates to true if the given positions are in the same row / column
     but are in different columns / rows
     """
     return (xy1[0] == xy2[0]) != (xy1[1] == xy2[1])
+
+
 def conflicting(A, a, B, b):
     """
     Evaluates to true if:
@@ -182,6 +192,7 @@ def conflicting(A, a, B, b):
                 return True
 
     return False
+
 
 def gdomains(size, cliques):
     """
@@ -201,13 +212,17 @@ def gdomains(size, cliques):
     for clique in cliques:
         members, operator, target = clique
 
-        domains[members] = list(product(range(1, size + 1), repeat=len(members)))
+        domains[members] = list(
+            product(range(1, size + 1), repeat=len(members)))
 
-        qualifies = lambda values: not conflicting(members, values, members, values) and satisfies(values, operation(operator), target)
+        def qualifies(values): return not conflicting(
+            members, values, members, values) and satisfies(values, operation(operator), target)
 
         domains[members] = list(filter(qualifies, domains[members]))
 
     return domains
+
+
 def satisfies(values, operation, target):
     """
     Evaluates to true if the result of applying the operation
@@ -218,6 +233,8 @@ def satisfies(values, operation, target):
             return True
 
     return False
+
+
 def gneighbors(cliques):
     """
     Determine the neighbors of each variable for the given puzzle
@@ -240,7 +257,6 @@ def gneighbors(cliques):
     return neighbors
 
 
-
 class Kenken(algorithm_csp.CSP):
 
     def __init__(self, size, cliques):
@@ -254,14 +270,15 @@ class Kenken(algorithm_csp.CSP):
               when applied on the members of the clique
         """
         #validate(size, cliques)
-        
+
         variables = [members for members, _, _ in cliques]
-        
+
         domains = gdomains(size, cliques)
 
         neighbors = gneighbors(cliques)
 
-        algorithm_csp.CSP.__init__(self, variables, domains, neighbors, self.constraint)
+        algorithm_csp.CSP.__init__(
+            self, variables, domains, neighbors, self.constraint)
 
         self.size = size
 
@@ -274,7 +291,7 @@ class Kenken(algorithm_csp.CSP):
         self.meta = {}
         for members, operator, target in cliques:
             self.meta[members] = (operator, target)
-            self.padding = max(self.padding, len(str(target)))        
+            self.padding = max(self.padding, len(str(target)))
 
     # def nconflicts(self, var, val, assignment):
 
@@ -309,13 +326,15 @@ class Kenken(algorithm_csp.CSP):
                     for member in members:
                         atomic[member] = None
         else:
-            atomic = {member:None for members in self.variables for member in members}
+            atomic = {
+                member: None for members in self.variables for member in members}
 
-        atomic = sorted(atomic.items(), key=lambda item: item[0][1] * self.size + item[0][0])
+        atomic = sorted(
+            atomic.items(), key=lambda item: item[0][1] * self.size + item[0][0])
 
-        padding = lambda c, offset: (c * (self.padding + 2 - offset))
+        def padding(c, offset): return (c * (self.padding + 2 - offset))
 
-        embrace = lambda inner, beg, end: beg + inner + end
+        def embrace(inner, beg, end): return beg + inner + end
 
         mentioned = set()
 
@@ -327,15 +346,17 @@ class Kenken(algorithm_csp.CSP):
 
             return ""
 
-        fit = lambda word: padding(" ", len(word)) + word + padding(" ", 0)
+        def fit(word): return padding(" ", len(word)) + word + padding(" ", 0)
 
         cpadding = embrace(2 * padding(" ", 0), "|", "") * self.size + "|"
 
         def show(row):
 
-            rpadding = "".join(["|" + fit(meta(item[0])) for item in row]) + "|"
+            rpadding = "".join(["|" + fit(meta(item[0]))
+                               for item in row]) + "|"
 
-            data = "".join(["|" + fit(str(item[1] if item[1] else "")) for item in row]) + "|"
+            data = "".join(["|" + fit(str(item[1] if item[1] else ""))
+                           for item in row]) + "|"
 
             print(rpadding, data, cpadding, sep="\n")
 
@@ -365,23 +386,25 @@ class Kenken(algorithm_csp.CSP):
         for var in self.variables:
             print("neighbors[", var, "] =", self.neighbors[var])
 
+
 def benchmark(kenken, algorithm):
-        """
-        Used in order to benchmark the given algorithm in terms of
-          * The number of nodes it visits
-          * The number of constraint checks it performs
-          * The number of assignments it performs
-          * The completion time
-        """
-        kenken.checks = kenken.nassigns = 0
+    """
+    Used in order to benchmark the given algorithm in terms of
+      * The number of nodes it visits
+      * The number of constraint checks it performs
+      * The number of assignments it performs
+      * The completion time
+    """
+    kenken.checks = kenken.nassigns = 0
 
-        dt = time()
+    dt = time()
 
-        assignment = algorithm(kenken)
+    assignment = algorithm(kenken)
 
-        dt = time() - dt
+    dt = time() - dt
 
-        return assignment, (kenken.checks, kenken.nassigns, dt)
+    return assignment, (kenken.checks, kenken.nassigns, dt)
+
 
 def gather(iterations, out):
     """
@@ -394,12 +417,20 @@ def gather(iterations, out):
            of the algorithm for the current size.
       * Save the results into a csv file
     """
-    bt         = lambda ken: algorithm_csp.backtracking_search(ken)
-    bt_mrv     = lambda ken: algorithm_csp.backtracking_search(ken, select_unassigned_variable=algorithm_csp.mrv)
-    fc         = lambda ken: algorithm_csp.backtracking_search(ken, inference=algorithm_csp.forward_checking)
-    fc_mrv     = lambda ken: algorithm_csp.backtracking_search(ken, inference=algorithm_csp.forward_checking, select_unassigned_variable=algorithm_csp.mrv)
-    mac        = lambda ken: algorithm_csp.backtracking_search(ken, inference=algorithm_csp.mac)
-    mconflicts = lambda ken: algorithm_csp.min_conflicts(ken)
+    def bt(ken): return algorithm_csp.backtracking_search(ken)
+
+    def bt_mrv(ken): return algorithm_csp.backtracking_search(
+        ken, select_unassigned_variable=algorithm_csp.mrv)
+
+    def fc(ken): return algorithm_csp.backtracking_search(
+        ken, inference=algorithm_csp.forward_checking)
+
+    def fc_mrv(ken): return algorithm_csp.backtracking_search(
+        ken, inference=algorithm_csp.forward_checking, select_unassigned_variable=algorithm_csp.mrv)
+    def mac(ken): return algorithm_csp.backtracking_search(
+        ken, inference=algorithm_csp.mac)
+
+    def mconflicts(ken): return algorithm_csp.min_conflicts(ken)
     algorithms = {
         "BT": bt,
         "BT+MRV": bt_mrv,
@@ -413,7 +444,8 @@ def gather(iterations, out):
 
         out = writer(file)
 
-        out.writerow(["Algorithm", "Size", "Result", "Constraint checks", "Assignments", "Completion time"])
+        out.writerow(["Algorithm", "Size", "Result",
+                     "Constraint checks", "Assignments", "Completion time"])
 
         for name, algorithm in algorithms.items():
             for size in range(3, 10):
@@ -421,15 +453,19 @@ def gather(iterations, out):
                 for iteration in range(1, iterations + 1):
                     size, cliques = generate(size)
 
-                    assignment, data = benchmark(Kenken(size, cliques), algorithm)
+                    assignment, data = benchmark(
+                        Kenken(size, cliques), algorithm)
 
-                    print("algorithm =",  name, "size =", size, "iteration =", iteration, "result =", "Success" if assignment else "Failure", file=stderr)
+                    print("algorithm =",  name, "size =", size, "iteration =", iteration,
+                          "result =", "Success" if assignment else "Failure", file=stderr)
 
-                    checks      += data[0] / iterations
+                    checks += data[0] / iterations
                     assignments += data[1] / iterations
-                    dt          += data[2] / iterations
-                    
+                    dt += data[2] / iterations
+
                 out.writerow([name, size, checks, assignments, dt])
+
+
 class AnotherWindow(QMainWindow):
     """
     This "window" is a QWidget. If it has no parent, it
@@ -439,138 +475,149 @@ class AnotherWindow(QMainWindow):
     def _init_(self):
         super()._init_()
         top = 100
-        siz=0
+        siz = 0
         left = 100
         width = 800
         height = 800
         self.cliques = []
-        self.size=0
-    
+        self.size = 0
+
         self.setGeometry(left, top, width, height)
         self.setWindowTitle("hello")
         layout = QVBoxLayout()
-        self.input1 = QLineEdit()
-        self.input2 = QLineEdit()
+        self.input1 = QTextEdit()
+        self.input2 = QTextEdit()
         layout.addWidget(self.input1)
         layout.addWidget(self.input2)
         self.CloseButton = QPushButton("close")
         layout.addWidget(self.CloseButton)
         self.setLayout(layout)
 
-    #def buttons(self):
+    # def buttons(self):
         #button1 = QPushButton("Backtracking", self)
         #button2 = QPushButton("Forward checking", self)
         #button3 = QPushButton("Arc consistency", self)
         #button4 = QPushButton("Close", self)
-          # button.move(100,100)
+        # button.move(100,100)
         #button1.setGeometry(QRect(30, 900, 150, 50))
         #button2.setGeometry(QRect(200, 900, 200, 50))
         #button3.setGeometry(QRect(420, 900, 200, 50))
         #button4.setGeometry(QRect(640, 900, 100, 50))
         #button1.clicked.connect(self. Backtracking)
         #button2.clicked.connect(self. Backtracking_with_forward_checking)
-        #button3.clicked.connect(self.Backtracking_with_arc_consistency)
-        #button4.clicked.connect(self.Close)""
-    
+        # button3.clicked.connect(self.Backtracking_with_arc_consistency)
+        # button4.clicked.connect(self.Close)""
+
     def Backtracking(self):
         ken = Kenken(self.size, self.cliques)
         assignment = algorithm_csp.backtracking_search(ken)
-        
+
         for members in assignment:
             #random_number = randint(0, 16777215)
             #hex_number = str(hex(random_number))
-            #color = '#' + hex_number[2:]
+            # color = '#' + hex_number[2:]
             flag = 0
             print(assignment)
-            
 
             for member in members:
-                value=assignment[members][flag]
+                value = assignment[members][flag]
                 x, y = member
                 i = x-1
                 j = y-1
                 flag = flag+1
 
-                #setattr(self, 'textbox%d%d' % (i, j), QLineEdit(self))
-                getattr(self, 'textbox%d%d' % (i, j)).move(20 + 92 * j, 20 + 92 * i)
-                getattr(self, 'textbox%d%d' % (i, j)).resize(90, 90)
-                getattr(self, 'textbox%d%d' % (i, j)).setAlignment(Qt.AlignCenter)
+                #setattr(self, 'textbox%d%d' % (i, j), QTextEdit(self))
+                #getattr(self, 'textbox%d%d' % (i, j)).move(20 + 92 * j, 20 + 92 * i)
+                #getattr(self, 'textbox%d%d' % (i, j)).resize(90, 90)
+                #getattr(self, 'textbox%d%d' % (i, j)).setAlignment(Qt.AlignCenter)
                 font = QFont()
                 font.setFamily("Comic Sans MS")
                 font.setPointSize(15)
-                getattr(self, 'textbox%d%d' % (i, j)).setText(str(value))
-                getattr(self, 'textbox%d%d' % (i, j)).setFont(font)
-                getattr(self, 'textbox%d%d' % (i, j)).textChanged.connect(partial(self.on_change, i, j, use_color_A(i, j)))
-            
+
+                m = ""
+                m = getattr(self, 'textbox%d%d' % (i, j)).toPlainText()
+
+                getattr(self, 'textbox%d%d' % (i, j)).setText(
+                    m+"\n"+"\n"+"   "+str(value).capitalize())
+
+                #getattr(self, 'textbox%d%d' % (i, j)).setFont(font)
+                #getattr(self, 'textbox%d%d' % (i, j)).textChanged.connect(partial(self.on_change, i, j, use_color_A(i, j)))
+
     def Backtracking_with_forward_checking(self):
         ken = Kenken(self.size, self.cliques)
-        assignment = algorithm_csp.backtracking_search(ken, inference=algorithm_csp.forward_checking)
-         
+        assignment = algorithm_csp.backtracking_search(
+            ken, inference=algorithm_csp.forward_checking)
+
         for members in assignment:
             #random_number = randint(0, 16777215)
             #hex_number = str(hex(random_number))
-            #color = '#' + hex_number[2:]
+            # color = '#' + hex_number[2:]
             flag = 0
             print(assignment)
             for member in members:
-                value=assignment[members][flag]
+                value = assignment[members][flag]
                 x, y = member
                 i = x-1
                 j = y-1
                 flag = flag+1
-                #setattr(self, 'textbox%d%d' % (i, j), QLineEdit(self))
-                getattr(self, 'textbox%d%d' % (i, j)).move(20 + 92 * j, 20 + 92 * i)
+                #setattr(self, 'textbox%d%d' % (i, j), QTextEdit(self))
+                getattr(self, 'textbox%d%d' % (i, j)).move(
+                    20 + 92 * j, 20 + 92 * i)
                 getattr(self, 'textbox%d%d' % (i, j)).resize(90, 90)
-                getattr(self, 'textbox%d%d' % (i, j)).setAlignment(Qt.AlignCenter)
+                getattr(self, 'textbox%d%d' %
+                        (i, j)).setAlignment(Qt.AlignCenter)
                 font = QFont()
                 font.setFamily("Comic Sans MS")
                 font.setPointSize(15)
                 getattr(self, 'textbox%d%d' % (i, j)).setText(str(value))
                 getattr(self, 'textbox%d%d' % (i, j)).setFont(font)
-                getattr(self, 'textbox%d%d' % (i, j)).textChanged.connect(partial(self.on_change, i, j, use_color_A(i, j)))
-       
+                getattr(self, 'textbox%d%d' % (i, j)).textChanged.connect(
+                    partial(self.on_change, i, j, use_color_A(i, j)))
 
     def Backtracking_with_arc_consistency(self):
         ken = Kenken(self.size, self.cliques)
-        assignment = algorithm_csp.backtracking_search(ken, inference=algorithm_csp.mac)
+        assignment = algorithm_csp.backtracking_search(
+            ken, inference=algorithm_csp.mac)
         for members in assignment:
             #random_number = randint(0, 16777215)
             #hex_number = str(hex(random_number))
-            #color = '#' + hex_number[2:]
+            # color = '#' + hex_number[2:]
             flag = 0
             print(assignment)
             for member in members:
-                value=assignment[members][flag]
+                value = assignment[members][flag]
                 x, y = member
                 i = x-1
                 j = y-1
                 flag = flag+1
-                #setattr(self, 'textbox%d%d' % (i, j), QLineEdit(self))
-                getattr(self, 'textbox%d%d' % (i, j)).move(20 + 92 * j, 20 + 92 * i)
+                #setattr(self, 'textbox%d%d' % (i, j), QTextEdit(self))
+                getattr(self, 'textbox%d%d' % (i, j)).move(
+                    20 + 92 * j, 20 + 92 * i)
                 getattr(self, 'textbox%d%d' % (i, j)).resize(90, 90)
-                getattr(self, 'textbox%d%d' % (i, j)).setAlignment(Qt.AlignCenter)
+                getattr(self, 'textbox%d%d' %
+                        (i, j)).setAlignment(Qt.AlignCenter)
                 font = QFont()
                 font.setFamily("Comic Sans MS")
                 font.setPointSize(15)
                 getattr(self, 'textbox%d%d' % (i, j)).setText(str(value))
                 getattr(self, 'textbox%d%d' % (i, j)).setFont(font)
-                getattr(self, 'textbox%d%d' % (i, j)).textChanged.connect(partial(self.on_change, i, j, use_color_A(i, j)))
-       
+                getattr(self, 'textbox%d%d' % (i, j)).textChanged.connect(
+                    partial(self.on_change, i, j, use_color_A(i, j)))
 
     def Close(self):
-       sys.exit()
+        sys.exit()
 
     def display(self):
         self.show()
 
     def on_change(self, i, j, is_color_A):
-        n = getattr(self, 'textbox%d%d' % (i, j)).text()
+        n = getattr(self, 'textbox%d%d' % (i, j)).toPlainText()
         if len(n) == 1 and not n.isdigit() or len(n) > 1:
             getattr(self, 'textbox%d%d' % (i, j)).setStyleSheet(
                 'background-color: %s;' % COLOR_ERR)
-            self.button1.setEnabled(False)
-            self.button2.setEnabled(False)
-            self.button3.setEnabled(False)
+            self.button1.setEnabled(True)
+            self.button2.setEnabled(True)
+            self.button3.setEnabled(True)
         elif is_color_A:
             getattr(self, 'textbox%d%d' % (i, j)).setStyleSheet(
                 'background-color: %s;' % COLOR_A)
@@ -585,7 +632,7 @@ class AnotherWindow(QMainWindow):
             self.button3.setEnabled(True)
 
     def initUI(self, n):
-        self.siz=n
+        self.siz = n
         qtRectangle = self.frameGeometry()
         centerPoint = QDesktopWidget().availableGeometry().center()
         qtRectangle.moveCenter(centerPoint)
@@ -597,24 +644,24 @@ class AnotherWindow(QMainWindow):
         consolas = QFont()
         consolas.setFamily("Consolas")
         consolas.setPointSize(12)
-        #self.button1.setFont(consolas)
-        self.button1.setGeometry(QRect(10,700,100,50))
+        # self.button1.setFont(consolas)
+        self.button1.setGeometry(QRect(10, 700, 100, 50))
         # connect the solve button to function on_solve_click
         self.button1.clicked.connect(self.Backtracking)
-        self.button2 = QPushButton("Backtracking with forward checking",self)
-        self.button3 = QPushButton("Backtracking with arc consistency",self)
-        self.button4 = QPushButton("Close",self)
-        self.button2.setGeometry(QRect(120,700,250,50))
-        self.button3.setGeometry(QRect(380,700,250,50))
-        self.button4.setGeometry(QRect(640,700,100,50))
+        self.button2 = QPushButton("Backtracking with forward checking", self)
+        self.button3 = QPushButton("Backtracking with arc consistency", self)
+        self.button4 = QPushButton("Close", self)
+        self.button2.setGeometry(QRect(120, 700, 250, 50))
+        self.button3.setGeometry(QRect(380, 700, 250, 50))
+        self.button4.setGeometry(QRect(640, 700, 100, 50))
         #button1.clicked.connect(self. Backtracking)
         self.button2.clicked.connect(self. Backtracking_with_forward_checking)
         self.button3.clicked.connect(self.Backtracking_with_arc_consistency)
         self.button4.clicked.connect(self.Close)
         print(self.cliques)
         self.setWindowTitle('KENKEN PUZZLE')
-        valid=validate(self.cliques)
-        while(valid==False):    
+        valid = validate(self.cliques)
+        while(valid == False):
             self.size, self.cliques = generate(n)
             valid = validate(self.cliques)
         for members in self.cliques:
@@ -627,8 +674,9 @@ class AnotherWindow(QMainWindow):
                 i = x-1
                 j = y-1
                 flag = flag+1
-                setattr(self, 'textbox%d%d' % (i, j), QLineEdit(self))
-                getattr(self, 'textbox%d%d' % (i, j)).move(20 + 92 * j, 20 + 92 * i)
+                setattr(self, 'textbox%d%d' % (i, j), QTextEdit(self))
+                getattr(self, 'textbox%d%d' % (i, j)).move(
+                    20 + 92 * j, 20 + 92 * i)
                 getattr(self, 'textbox%d%d' % (i, j)).resize(90, 90)
                 getattr(self, 'textbox%d%d' % (i, j)).setAlignment(Qt.AlignTop)
                 font = QFont()
@@ -636,90 +684,88 @@ class AnotherWindow(QMainWindow):
                 font.setPointSize(11)
                 if(flag == 1):
                     if(members[1] == '.'):
-                        getattr(self, 'textbox%d%d' % (i, j)).setText(str(members[2]))
+                        getattr(self, 'textbox%d%d' %
+                                (i, j)).setText(str(members[2]))
                     elif(members[1] == '*'):
-                        getattr(self, 'textbox%d%d' %(i, j)).setText(str(members[2])+' , *')
+                        getattr(self, 'textbox%d%d' %
+                                (i, j)).setText(str(members[2])+' , *')
                     else:
-                        getattr(self, 'textbox%d%d' % (i, j)).setText(str(members[2])+' , '+members[1])
+                        getattr(self, 'textbox%d%d' % (i, j)).setText(
+                            str(members[2])+' , '+members[1])
 
                 getattr(self, 'textbox%d%d' % (i, j)).setFont(font)
-                getattr(self, 'textbox%d%d' % (i, j)).textChanged.connect(partial(self.on_change, i, j, use_color_A(i, j)))
 
                 if use_color_A(i, j):
                     getattr(self, 'textbox%d%d' % (i, j)).setStyleSheet(
-                    'background-color: %s;' % color)
+                        'background-color: %s;' % color)
                 else:
                     getattr(self, 'textbox%d%d' % (i, j)).setStyleSheet(
                         'background-color: %s;' % color)
 
+
 class Window (QMainWindow):
     def __init__(self):
         super().__init__()
-        self.num=0
-        self.flag=0
-        self.w=AnotherWindow() 
-        title="KenKen"
-        top=100
-        left=100
-        width=350
-        height=150
-        iConName="home.png"
+        self.num = 0
+        self.flag = 0
+        self.w = AnotherWindow()
+        title = "KenKen"
+        top = 100
+        left = 100
+        width = 350
+        height = 150
+        iConName = "home.png"
         self.setWindowTitle(title)
         self.setWindowIcon(QtGui.QIcon(iConName))
-        self.setGeometry(left,top,width,height)
-        self.CreateButton()      
+        self.setGeometry(left, top, width, height)
+        self.CreateButton()
         self.size()
         self.show()
         # self.initUI()
 
     def show_new_window(self, checked):
-       self.w.initUI(self.num)
-      # self.w.buttons()
-       self.w.setGeometry(50,50,950,1000)
-       self.w.display()
-      
+        self.w.initUI(self.num)
+       # self.w.buttons()
+        self.w.setGeometry(50, 50, 950, 1000)
+        self.w.display()
+
     def size(self):
-        self.textbox = QLineEdit(self)
+        self.textbox = QTextEdit(self)
         self.textbox.move(20, 20)
-        self.textbox.resize(280,40)
-    
+        self.textbox.resize(280, 40)
+
     def on_click(self):
-        textboxValue = self.textbox.text()
-        if(int(textboxValue)>9 or int(textboxValue)<3):
-            QMessageBox.question(self, 'Message - pythonspot.com', "Error" + textboxValue, QMessageBox.Ok, QMessageBox.Ok)
+        textboxValue = self.textbox.toPlainText()
+        if(int(textboxValue) > 9 or int(textboxValue) < 3):
+            QMessageBox.question(self, 'Message - pythonspot.com',
+                                 "Error" + textboxValue, QMessageBox.Ok, QMessageBox.Ok)
             self.textbox.setText("")
         else:
-            self.num=int(textboxValue)
+            self.num = int(textboxValue)
             self.button.clicked.connect(self.show_new_window)
-                  
+
     def CreateButton(self):
         # Create a button in the window
-         self.button = QPushButton('Enter Size', self)
-         self.button.move(20,80)
-         # self.setCentralWidget(self.button)       
+        self.button = QPushButton('Enter Size', self)
+        self.button.move(20, 80)
+        # self.setCentralWidget(self.button)
         # connect button to function on_click
-         self.button.clicked.connect(self.on_click)
-         
+        self.button.clicked.connect(self.on_click)
+
 
 if __name__ == '__main__':
    # App=QApplication(sys.argv)
     # window=Window()
     # sys.exit(App.exec())
-  
-     #size, cliques = generate(list(stdin))
 
-     #ken = Kenken(size, cliques)
+    #size, cliques = generate(list(stdin))
 
-     #assignment = algorithm_csp.backtracking_search(ken)
+    #ken = Kenken(size, cliques)
 
-     #ken.display(assignment)
-     app = QApplication(sys.argv)
-     w = Window()
-     w.show()
-     app.exec()
+    #assignment = algorithm_csp.backtracking_search(ken)
 
-
-
-
-
-       
+    # ken.display(assignment)
+    app = QApplication(sys.argv)
+    w = Window()
+    w.show()
+    app.exec()
