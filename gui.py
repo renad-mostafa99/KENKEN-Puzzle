@@ -1,5 +1,6 @@
 # from curses.textpad import Textbox
-from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QVBoxLayout, QTextEdit, QMessageBox, QDesktopWidget
+from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QVBoxLayout, QTextEdit, QMessageBox, QDesktopWidget, \
+    QLabel
 from functools import partial
 import numpy as np
 from PyQt5.QtCore import Qt, pyqtSlot
@@ -11,7 +12,7 @@ from PyQt5.QtCore import QRect
 from functools import reduce
 from sqlalchemy import true
 import algorithm_csp
-
+import timeit
 # @ <component>: <usage>
 
 # @ stderr: reporting errors
@@ -245,6 +246,7 @@ def gneighbors(cliques):
             if they are probable to 'conflict' they are considered neighbors
     """
     neighbors = {}
+    
     for members, _, _ in cliques:
         neighbors[members] = []
 
@@ -256,6 +258,8 @@ def gneighbors(cliques):
                     neighbors[B].append(A)
 
     return neighbors
+
+
 
 
 class Kenken(algorithm_csp.CSP):
@@ -310,6 +314,8 @@ class Kenken(algorithm_csp.CSP):
         self.checks += 1
 
         return A == B or not conflicting(A, a, B, b)
+        
+        
 
     def display(self, assignment):
         """
@@ -369,6 +375,8 @@ class Kenken(algorithm_csp.CSP):
             show(list(filter(lambda item: item[0][1] == i, atomic)))
 
             print(rpadding)
+    
+    
 
     def info(self):
         """
@@ -428,6 +436,8 @@ def gather(iterations, out):
 
     def fc_mrv(ken): return algorithm_csp.backtracking_search(
         ken, inference=algorithm_csp.forward_checking, select_unassigned_variable=algorithm_csp.mrv)
+        
+        
     def mac(ken): return algorithm_csp.backtracking_search(
         ken, inference=algorithm_csp.mac)
 
@@ -452,6 +462,7 @@ def gather(iterations, out):
             for size in range(3, 10):
                 checks, assignments, dt = (0, 0, 0)
                 for iteration in range(1, iterations + 1):
+                
                     size, cliques = generate(size)
 
                     assignment, data = benchmark(
@@ -472,28 +483,41 @@ class AnotherWindow(QMainWindow):
     This "window" is a QWidget. If it has no parent, it
     will appear as a free-floating window as we want.
     """
-
+    
     def _init_(self):
         super()._init_()
+        
+        #window data 
         top = 100
-        siz = 0
         left = 100
         width = 800
-        height = 800
+        height = 1000
+        #buttons flages 
+        
+        self.flagBT = 0
+        self.flagfc = 0
+        self.flagAC = 0
+        #time variable
+        
+        self.BT_time
+        self.FC_time
+        self.AC_time
+        
         self.cliques = []
         self.size = 0
         self.setGeometry(left, top, width, height)
         self.setWindowTitle("hello")
         layout = QVBoxLayout()
+        
         self.input1 = QTextEdit()
         self.input2 = QTextEdit()
         layout.addWidget(self.input1)
         layout.addWidget(self.input2)
+        
         self.CloseButton = QPushButton("close")
         layout.addWidget(self.CloseButton)
         self.setLayout(layout)
-
-    # def buttons(self):
+        # def buttons(self):
         #button1 = QPushButton("Backtracking", self)
         #button2 = QPushButton("Forward checking", self)
         #button3 = QPushButton("Arc consistency", self)
@@ -509,13 +533,18 @@ class AnotherWindow(QMainWindow):
         # button4.clicked.connect(self.Close)""
 
     def Backtracking(self):
+    
+        self.flagfc = 1
+        self.flagAC = 1
         ken = Kenken(self.size, self.cliques)
+        time1 = timeit.default_timer()
         assignment = algorithm_csp.backtracking_search(ken)
-
+        time2 = timeit.default_timer()
+        self.BT_time = time2-time1
+        print(self.BT_time)
+        self.label_1.setText("Backtracking time : " + str(self.BT_time))
+        
         for members in assignment:
-            #random_number = randint(0, 16777215)
-            #hex_number = str(hex(random_number))
-            # color = '#' + hex_number[2:]
             flag = 0
             for member in members:
                 value = assignment[members][flag]
@@ -526,23 +555,41 @@ class AnotherWindow(QMainWindow):
                 font = QFont()
                 font.setFamily("Comic Sans MS")
                 font.setPointSize(15)
-                m = ""
-                m = getattr(self, 'textbox%d%d' % (i, j)).toPlainText()
-                getattr(self, 'textbox%d%d' % (i, j)).setText(
-                    m+"\n"+"\n"+"   "+str(value).capitalize())
+                
+                m=""
+                m= getattr(self, 'textbox%d%d' % (i, j)).toPlainText()
+                
+                
+                if(self.flagBT == 1):
+                    k = ''
+                    o=0
+                    for o in range(9):
+                        if(m[o]==' ' and m[o+1]==' '):
+                            break
+                        else:
+                            k += m[o] 
+                    getattr(self, 'textbox%d%d' % (i, j)).setText(
+                        k+"   "+str(value).capitalize())
+                else:
+                    getattr(self, 'textbox%d%d' % (i, j)).setText(
+                        m+"\n"+"\n"+"   "+str(value).capitalize())
+        self.flagBT = 0
         print(assignment)
 
-                #getattr(self, 'textbox%d%d' % (i, j)).setFont(font)
-                #getattr(self, 'textbox%d%d' % (i, j)).textChanged.connect(partial(self.on_change, i, j, use_color_A(i, j)))
 
     def Backtracking_with_forward_checking(self):
+        self.flagBT = 1
+        self.flagAC = 1
         ken = Kenken(self.size, self.cliques)
+        time1 = timeit.default_timer()
         assignment = algorithm_csp.backtracking_search(
         ken, inference=algorithm_csp.forward_checking)
+        time2 = timeit.default_timer()
+        self.FC_time = time2 - time1
+        print(self.FC_time)
+        self.label_2.setText("Backtracking with forword checking time : " + str(self.FC_time))
+        
         for members in assignment:
-            #random_number = randint(0, 16777215)
-            #hex_number = str(hex(random_number))
-            # color = '#' + hex_number[2:]
             flag = 0
             for member in members:
                 value = assignment[members][flag]
@@ -557,20 +604,38 @@ class AnotherWindow(QMainWindow):
                 font = QFont()
                 font.setFamily("Comic Sans MS")
                 font.setPointSize(15)
-                m = ""
-                m = getattr(self, 'textbox%d%d' % (i, j)).toPlainText()
-                getattr(self, 'textbox%d%d' % (i, j)).setText(
-                    m+"\n"+"\n"+"   "+str(value).capitalize())
+                
+                m=""
+                m= getattr(self, 'textbox%d%d' % (i, j)).toPlainText()
+                
+                if(self.flagfc == 1):
+                    k = ''
+                    o=0
+                    for o in range(9):
+                        if(m[o]==' ' and m[o+1]==' '):
+                            break
+                        else:
+                            k += m[o] 
+                    getattr(self, 'textbox%d%d' % (i, j)).setText(
+                        k+"   "+str(value).capitalize())
+                else:
+                    getattr(self, 'textbox%d%d' % (i, j)).setText(
+                        m+"\n"+"\n"+"   "+str(value).capitalize())
+        self.flagfc = 0
         print(assignment)
 
+
     def Backtracking_with_arc_consistency(self):
-        self.on_clear_click()
+        self.flagfc = 1
+        self.flagBT = 1
         ken = Kenken(self.size, self.cliques)
+        time1 = timeit.default_timer()
         assignment = algorithm_csp.backtracking_search(ken, inference=algorithm_csp.mac)
+        time2 = timeit.default_timer()
+        self.AC_time = time2 - time1
+        print(self.AC_time)
+        self.label_3.setText("Backtracking with arc consistency time : " + str(self.AC_time))
         for members in assignment:
-            #random_number = randint(0, 16777215)
-            #hex_number = str(hex(random_number))
-            # color = '#' + hex_number[2:]
             flag = 0
             for member in members:
                 value = assignment[members][flag]
@@ -585,15 +650,29 @@ class AnotherWindow(QMainWindow):
                 font = QFont()
                 font.setFamily("Comic Sans MS")
                 font.setPointSize(15)
-
-                m = ""
+                
+                m=""
                 m= getattr(self, 'textbox%d%d' % (i, j)).toPlainText()
+                
+                if(self.flagAC == 1):
+                    k = ''
+                    o=0
+                    for o in range(9):
+                        if(m[o]==' ' and m[o+1]==' '):
+                            break
+                        else:
+                            k += m[o] 
+                    getattr(self, 'textbox%d%d' % (i, j)).setText(
+                        k+"   "+str(value).capitalize())
+                else:
+                    getattr(self, 'textbox%d%d' % (i, j)).setText(
+                        m+"\n"+"\n"+"   "+str(value).capitalize())
+        self.flagAC = 0
 
-                getattr(self, 'textbox%d%d' % (i, j)).setText(
-                    m+"\n"+"\n"+"   "+str(value).capitalize())
-               
+                    
     def Close(self):
         sys.exit()
+
 
     def display(self):
         self.show()
@@ -618,11 +697,13 @@ class AnotherWindow(QMainWindow):
             self.button1.setEnabled(True)
             self.button2.setEnabled(True)
             self.button3.setEnabled(True)
+    
+    
     def on_clear_click(self):
        # self.console_text.setText('Welcome. Esc to exit')
         for i in range(self.siz):
             for j in range(self.siz):
-                getattr(self, 'textbox%d%d' % (i, j)).setText('')
+                getattr(self, 'textbox%d%d' % (i, j)).setText(" ")
                 #getattr(self,'textbox%d%d' % (i, j)).setStyleSheet('color: black;')
                 #if use_color_A(i, j):
                  #   getattr(self, 'textbox%d%d' % (i, j)).setStyleSheet(
@@ -630,8 +711,14 @@ class AnotherWindow(QMainWindow):
                 #else:
                  #   getattr(self, 'textbox%d%d' % (i, j)).setStyleSheet(
                   #      'background-color: %s;' % COLOR_B)
+
+                
     def initUI(self, n):
         self.siz = n
+        #buttons flags
+        self.flagBT = 0
+        self.flagfc = 0
+        self.flagAC = 0
         
         qtRectangle = self.frameGeometry()
         centerPoint = QDesktopWidget().availableGeometry().center()
@@ -644,6 +731,7 @@ class AnotherWindow(QMainWindow):
         consolas = QFont()
         consolas.setFamily("Consolas")
         consolas.setPointSize(12)
+        
         # self.button1.setFont(consolas)
         self.button1.setGeometry(QRect(10, 900, 100, 50))
         # connect the solve button to function on_solve_click
@@ -654,16 +742,35 @@ class AnotherWindow(QMainWindow):
         self.button2.setGeometry(QRect(120, 900, 250, 50))
         self.button3.setGeometry(QRect(380, 900, 250, 50))
         self.button4.setGeometry(QRect(640, 900, 100, 50))
+        #time view on gui 
+        
+        self.label_1 = QLabel("Backtracking time : ", self)
+        self.label_1.setGeometry(QRect(900, 50, 800, 300))
+        self.label_2 = QLabel("Backtracking with Forword Checking time: ", self)
+        self.label_2.setGeometry(QRect(900, 100, 800, 300))
+        self.label_3 = QLabel("Backtracking with arc consistency time: ", self)
+        self.label_3.setGeometry(QRect(900, 150, 800, 300))
+        
+        
+        consolas = QFont()
+        consolas.setFamily("Consolas")
+        consolas.setPointSize(15)
+        self.label_1.setFont(consolas)
+        self.label_2.setFont(consolas)
+        self.label_3.setFont(consolas)
         #button1.clicked.connect(self. Backtracking)
+        
         self.button2.clicked.connect(self. Backtracking_with_forward_checking)
         self.button3.clicked.connect(self.Backtracking_with_arc_consistency)
         self.button4.clicked.connect(self.Close)
         print(self.cliques)
         self.setWindowTitle('KENKEN PUZZLE')
         valid = validate(self.cliques)
+        
         while(valid == False):
             self.size, self.cliques = generate(n)
             valid = validate(self.cliques)
+        
         for members in self.cliques:
             random_number = randint(0, 16777215)
             hex_number = str(hex(random_number))
@@ -702,9 +809,6 @@ class AnotherWindow(QMainWindow):
                     getattr(self, 'textbox%d%d' % (i, j)).setStyleSheet(
                         'background-color: %s;' % color)
         
-                
-
-
 class Window (QMainWindow):
     def __init__(self):
         super().__init__()
@@ -771,3 +875,8 @@ if __name__ == '__main__':
     w = Window()
     w.show()
     app.exec()
+    
+    
+    
+    
+    
