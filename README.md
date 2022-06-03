@@ -1,6 +1,18 @@
 ## KENKEN-Puzzle
 
 Create a software that solves the KENKEN puzzle, By a constrain satisfaction problem (CSP).
+
+## To Run the project 
+### From exe file 
+1. download gui folder 
+2. in this folder You can find gui.exe that can run easly 
+
+worning : You cannot run gui.exe without the file in gui folder.
+### from vs code
+1. download gui.py and algorithm_csp
+2. download nessary libarary for pyqt5 
+
+hint : you nead to be install python on your device
  
 ## GUI supports
  
