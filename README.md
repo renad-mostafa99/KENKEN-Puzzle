@@ -7,7 +7,7 @@ Create a software that solves the KENKEN puzzle, By a constrain satisfaction pro
 1. download gui folder 
 2. in this folder You can find gui.exe that can run easly 
 
-> :warning: ** You cannot run gui.exe without the files and folders in gui folder!
+> :warning: **You cannot run gui.exe without the files and folders in gui folder!**
 
 ### from vs code
 1. download gui.py and algorithm_csp
